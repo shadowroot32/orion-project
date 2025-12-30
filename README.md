@@ -7,7 +7,7 @@
 
 > **Advanced Autonomous AI Penetration Testing & Reporting Framework**
 
-`![Screenshot Tool](path/to//home/sr01/Pictures/Screenshots/Screenshot_20251227_175617.png)`
+`![Screenshot Tool](path/to/Screenshot_20251227_175617.png)`
 
 **Orion** adalah kerangka kerja audit keamanan siber otomatis yang menggabungkan kecerdasan buatan (AI) dengan *arsenal* tools Kali Linux. Tidak sekadar *scanner* biasa, Orion bertindak sebagai **Agen Otonom** yang mampu berpikir, menganalisis output scan, dan menentukan langkah serangan selanjutnya secara logis.
 
