@@ -121,4 +121,4 @@ orion-project/
 ### ⚠️ Disclaimer
 DISCLAIMER: > Alat ini dibuat semata-mata untuk Tujuan Edukasi dan Ethical Hacking (Audit Keamanan Resmi). Pengembang tidak bertanggung jawab atas penyalahgunaan alat ini untuk menyerang target tanpa izin tertulis (illegal hacking). Gunakan dengan bijak dan bertanggung jawab.
 
-### Developed with 💻 & ☕ by [ShadowROot32]
+### Developed with 💻 & ☕ by [ShadowRoot32]
