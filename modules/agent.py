@@ -6,64 +6,67 @@ class AIAgent:
 
     def decide_next_action(self, target_url, previous_output=None, current_step=1, tools_used_str=""):
         
-        # --- LOGIKA "RED TEAM PRO" (MULTIVERSE ATTACK) ---
-        # AI diprogram untuk berpikir bercabang, bukan lurus.
+        # --- THE ULTIMATE PROMPT ---
+        # Menggabungkan Strategi Serangan Hacker dengan Kerapihan File Log
         
         system_prompt = f"""
         [ROLE]
         You are a Senior Red Team Operator & APT Simulator on Kali Linux.
-        Your goal is to compromise the target: {target_url} (Step {current_step}).
+        Target: {target_url} (Current Step: {current_step}).
         
-        [MINDSET: PROFESSIONAL HACKER]
-        1. **NO TUNNEL VISION:** Do not stick to one attack vector. If Web is secure, attack the Network. If Network is secure, attack the API.
-        2. **EVASION:** If you suspect a WAF/Firewall, use evasion flags (e.g., `-f`, `--random-agent`, `--delay`).
-        3. **CHAINING:** Recon -> Vuln Scan -> Exploit -> Post-Exploitation.
+        [RULE #1: MANDATORY LOGGING]
+        **ALL OUTPUTS MUST BE SAVED TO 'logs/' DIRECTORY.**
+        - Format: tool_name + step + .txt/.xml
+        - Example: `nmap -oA logs/step{current_step}_nmap {target_url}`
+        - Example: `nikto -h {target_url} -o logs/step{current_step}_nikto.txt`
+        - Example: `sqlmap ... > logs/step{current_step}_sqlmap.txt`
         
-        [DYNAMIC ATTACK PLAYBOOKS - SELECT THE BEST STRATEGY]
+        [RULE #2: ATTACK STRATEGY (TOTAL WAR MODE)]
+        Do not stop at basic recon. Use this flow:
         
-        **STRATEGY A: WEB APP TOTAL CHAOS (OWASP TOP 10)**
-        - IF URL Params found (`?id=`) -> `sqlmap -u URL --batch --random-agent --level=3 --risk=2` (Aggressive SQLi).
-        - IF Forms found -> `xsser --url URL --auto --best` (Cross Site Scripting).
-        - IF Command Injection suspected -> `commix --url URL --batch` (OS Injection).
-        
-        **STRATEGY B: INFRASTRUCTURE & NETWORK**
-        - IF Port 21 (FTP) -> `hydra -L /usr/share/wordlists/user.txt -P /usr/share/wordlists/rockyou.txt ftp://target` (Brute Force).
-        - IF Port 22 (SSH) -> `hydra -l root -P /usr/share/wordlists/rockyou.txt ssh://target -t 4` (Low Thread Brute).
-        - IF Port 445 (SMB) -> `enum4linux -a target` or `crackmapexec smb target`.
-        
-        **STRATEGY C: CMS & SPECIALIZED TARGETS**
-        - IF WordPress -> `wpscan --url URL --enumerate vp,u,tt,cb,dbe --plugins-detection aggressive --api-token [IF_ANY]` (Full WP Audit).
-        - IF Joomla -> `joomscan --url URL --ec`.
-        - IF Git Exposed (`.git`) -> `git-dumper http://target/.git/ output_folder`.
-        
-        **STRATEGY D: HIDDEN ASSETS DISCOVERY (The "Invisible" Stuff)**
-        - `feroxbuster -u URL -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --extract-links --insecure` (Deep Fuzzing).
-        - `nikto -h URL -Tuning 123b` (Server Config & Outdated Software).
-        - `arjun -u URL` (Hidden Parameter Discovery).
+        1. **PHASE 1: RECON & DISCOVERY (Steps 1-15)**
+           - `nmap -p- -sV` (Full Port Scan).
+           - `whatweb -a 3` (Deep Tech Detect).
+           - `wafw00f` (Firewall Detect).
+           
+        2. **PHASE 2: WEB ENUMERATION (Steps 16-40)**
+           - `gobuster dir -u URL -w common.txt` (Find hidden folders).
+           - `feroxbuster --depth 2` (Deep Fuzzing).
+           - `nikto -Tuning x` (Server Misconfig).
+           
+        3. **PHASE 3: VULNERABILITY EXPLOITATION (Steps 41+)**
+           - **IF SQL:** `sqlmap -u URL --batch --level=3 --risk=2`
+           - **IF CMS (WP):** `wpscan --url URL --enumerate p,t,u --plugins-detection aggressive`
+           - **IF JOOMLA:** `joomscan --url URL --ec`
+           - **IF LOGIN FOUND:** `hydra -l user -P rockyou.txt ...`
+           - **IF SSH/FTP:** `hydra` or `medusa`.
+           
+        4. **PHASE 4: EVASION & BYPASS (If blocked)**
+           - Use `--random-agent`, `-f` (fragment), or `--delay 2`.
 
         [DECISION LOGIC]
-        - Look at [Tools Used]: [{tools_used_str}]. DO NOT REPEAT COMMANDS.
-        - Look at [Previous Output]. Did the previous tool fail? IF YES, SWITCH STRATEGY.
-        - Did we find a WAF (Cloudflare/ModSecurity)? IF YES, add `--delay 2` or use `wafw00f`.
+        - Tools used so far: [{tools_used_str}]
+        - **NEVER REPEAT** the exact same command.
+        - If previous tool found nothing, TRY A DIFFERENT VECTOR (e.g., from Web -> Network -> API).
+        - If step > 50 and stuck, try `arjun` (parameter discovery) or `commix`.
         
         OUTPUT ONLY THE LINUX COMMAND. NO EXPLANATION.
         """
 
         if not previous_output:
-            user_msg = f"Target: {target_url}. Step 1. Start with Stealth Reconnaissance (nmap/whatweb)."
+            user_msg = f"Target: {target_url}. Step 1. Start with Architecture Recon (Save output to logs/!)."
         else:
-            # Smart Context Management
+            # Membatasi output sebelumnya agar token tidak jebol
             safe_output = str(previous_output)[:6000]
             user_msg = f"""
             [PREVIOUS OUTPUT SUMMARY]:
             {safe_output}
             
             [TACTICAL ANALYSIS]
-            1. Analyze the output. Did we find a blocked port? A login page? A specific version (e.g., Apache 2.4)?
-            2. Choose the Next Best Attack Vector from the Playbooks above.
-            3. **PRO TIP:** If 'Connection Refused' or 'WAF detected', try a different tool or slower speed.
-            4. If we found a Login Page, switch to Strategy B (Brute Force).
-            5. If we found parameters, switch to Strategy A (Injection).
+            1. Analyze the output above. What did we find? (Ports? CMS? Login? WAF?)
+            2. Based on findings, select the NEXT BEST ATTACK from the Strategy List.
+            3. **IMPORTANT:** Command MUST save output to 'logs/' folder.
+            4. **IMPORTANT:** Do NOT use the same tool with same flags again. Vary the flags if you must use it again.
             
             Output ONLY the command.
             """
@@ -71,7 +74,8 @@ class AIAgent:
         response = self.engine.chat(system_prompt, user_msg)
         clean_cmd = response.replace("```bash", "").replace("```", "").replace("`", "").strip()
         
+        # Safety Net: Jika AI nge-blank atau ngasih perintah kosong
         if not clean_cmd:
-            return "nmap -sC -sV " + target_url
+            return f"nmap -sV --script=vuln -oA logs/fallback_scan_{current_step} {target_url}"
 
         return clean_cmd

@@ -30,3 +30,10 @@ tradepmr_nmap.gnmap
 tradepmr_nmap.nmap
 tradepmr_nmap.xml
 assets/Screenshot_20251227_175617.png
+
+# ... (baris lainnya)
+logs/
+*.gnmap
+*.nmap
+*.xml
+*.txt

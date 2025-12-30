@@ -1,4 +1,4 @@
-print("[-] [SYSTEM] Memulai Python Interpreter...") # Debug Print 1
+print("[-] [SYSTEM] Memulai Python Interpreter...")
 
 import sys
 import os
@@ -9,38 +9,36 @@ import time
 try:
     from colorama import Fore, Style, init
     from dotenv import load_dotenv
-    print("[-] [SYSTEM] Library dasar (Colorama/Dotenv) OK.") # Debug Print 2
+    print("[-] [SYSTEM] Library dasar (Colorama/Dotenv) OK.")
 except ImportError as e:
     print(f"[!] CRITICAL ERROR: Library hilang. Jalankan: pip install colorama python-dotenv")
-    print(f"[!] Detail: {e}")
     sys.exit()
 
 # Cek Modul Project
 try:
-    # Memastikan Python bisa membaca folder utils/modules
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    
     from utils.ai_reporter import AIPentestReporter
     from modules.agent import AIAgent
     from utils.kali_executor import KaliExecutor
-    print("[-] [SYSTEM] Modul internal (Agent/Executor) OK.") # Debug Print 3
+    print("[-] [SYSTEM] Modul internal OK.")
 except ImportError as e:
-    print(f"[!] CRITICAL ERROR: Gagal memuat modul internal.")
-    print(f"[!] Pastikan struktur folder benar (ada folder 'utils' dan 'modules').")
-    print(f"[!] Detail: {e}")
+    print(f"[!] CRITICAL ERROR: Gagal memuat modul internal: {e}")
     sys.exit()
 
 load_dotenv()
 init(autoreset=True)
-VERSION = "7.2.0 (Stable Fix)"
+VERSION = "7.3.0 (Clean Logs Edition)"
 
-# --- HELPER FUNCTIONS ---
+# --- FITUR BARU: AUTO FOLDER LOGS ---
+if not os.path.exists("logs"):
+    os.makedirs("logs")
+    print("[-] [SYSTEM] Folder 'logs/' berhasil dibuat.")
+
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def print_banner():
     clear_screen()
-    # Menggunakan Raw String (r''') agar tidak error SyntaxWarning escape sequence
     print(r'''
     _  _  ____  ____  __  __  ____ 
    / )( \(  __)(_  _)(  )(  )(  _ \
@@ -66,10 +64,8 @@ def get_provider_choice():
         elif choice == '2': return "gemini"
         elif choice == '3': return "openai"
         elif choice == '4': return "ollama"
-        elif choice == '0': 
-            print("Bye!"); sys.exit()
-        else: 
-            input(f"{Fore.RED}[!] Pilihan tidak valid. Tekan Enter...{Style.RESET_ALL}")
+        elif choice == '0': sys.exit()
+        else: input(f"{Fore.RED}[!] Pilihan tidak valid.{Style.RESET_ALL}")
 
 def get_step_config():
     while True:
@@ -78,10 +74,9 @@ def get_step_config():
         print("2. Standard Audit   (30 Steps)")
         print(f"{Fore.RED}3. TOTAL WAR        (100 Steps){Style.RESET_ALL}")
         print("4. Custom Jumlah")
-        print(f"{Fore.BLUE}9. Back (Ganti AI){Style.RESET_ALL}")
+        print(f"{Fore.BLUE}9. Back{Style.RESET_ALL}")
         
         choice = input(f"\n{Fore.GREEN}[?] Pilihan: {Style.RESET_ALL}").strip()
-
         if choice == '1': return 10
         elif choice == '2': return 30
         elif choice == '3': return 100
@@ -95,33 +90,22 @@ def get_target_input():
         print(f"\n{Fore.YELLOW}[ TARGET ] MASUKKAN URL/IP:{Style.RESET_ALL}")
         print(f"(Ketik {Fore.BLUE}'back'{Style.RESET_ALL} kembali, {Fore.RED}'exit'{Style.RESET_ALL} keluar)")
         target = input(f"{Fore.GREEN}[?] Target: {Style.RESET_ALL}").strip()
-        
         if target.lower() == 'back': return "BACK"
         if target.lower() == 'exit': sys.exit()
         if target: return target
 
-# --- MAIN LOGIC ---
 def main():
-    print("[-] [SYSTEM] Masuk ke fungsi main()...") # Debug Print 4
-    
-    # CLI Argument Parser
     parser = argparse.ArgumentParser()
     parser.add_argument('-y', '--yes', action='store_true', help='Auto-Approve')
     parser.add_argument('-t', '--target', type=str, help='Target URL')
     parser.add_argument('-s', '--steps', type=int, help='Steps count')
     args = parser.parse_args()
-
     cli_mode = bool(args.target)
 
     while True:
-        # 1. Pilih Provider
-        if cli_mode:
-            provider = "groq"
-            print(f"{Fore.MAGENTA}[CLI] Default: GROQ{Style.RESET_ALL}")
-        else:
-            provider = get_provider_choice()
+        if cli_mode: provider = "groq"
+        else: provider = get_provider_choice()
 
-        # 2. Setup API Key
         api_key = None
         if provider != "ollama":
             env_var = f"{provider.upper()}_API_KEY"
@@ -132,48 +116,40 @@ def main():
                 if inp.lower() == 'back': continue
                 api_key = inp
 
-        # 3. Pilih Steps
         while True:
-            if cli_mode:
-                max_steps = args.steps if args.steps else 50
+            if cli_mode: max_steps = args.steps if args.steps else 50
             else:
                 s = get_step_config()
                 if s == "BACK": break
                 max_steps = s
 
-            # 4. Input Target
             while True:
-                if cli_mode:
-                    target = args.target
+                if cli_mode: target = args.target
                 else:
                     target = get_target_input()
                     if target == "BACK": break
 
-                # --- START SESSION ---
                 try:
                     print_banner()
-                    print(f"{Fore.MAGENTA}[*] INISIALISASI AGENT...{Style.RESET_ALL}")
-                    
+                    print(f"{Fore.MAGENTA}[*] SESSION STARTED{Style.RESET_ALL}")
                     executor = KaliExecutor(auto_approve=args.yes)
                     agent = AIAgent(provider, api_key)
                     reporter = AIPentestReporter(provider, api_key)
 
                     print(f"    Target : {target}")
-                    print(f"    Engine : {provider.upper()}")
+                    print(f"    Log Dir: {Fore.YELLOW}./logs/{Style.RESET_ALL}")
                     print("-" * 40)
 
                     history = []
                     last_out = None
                     used_tools = []
                     
-                    # LOOP STEP
                     for i in range(1, max_steps + 1):
                         print(f"\n{Fore.CYAN}┌── [STEP {i}/{max_steps}] AI Thinking...{Style.RESET_ALL}")
                         
                         ctx = ", ".join(used_tools[-10:])
                         cmd = agent.decide_next_action(target, last_out, i, ctx)
                         
-                        # Simpan tool yg dipakai
                         tname = cmd.split(" ")[0]
                         if tname not in used_tools: used_tools.append(tname)
 
@@ -193,12 +169,10 @@ def main():
                         history.append({"step": i, "command": cmd, "output": out})
                         last_out = out
 
-                    # REPORTING
                     if history:
-                        print(f"\n{Fore.MAGENTA}┌── MEMBUAT LAPORAN...{Style.RESET_ALL}")
+                        print(f"\n{Fore.MAGENTA}┌── GENERATING REPORTS...{Style.RESET_ALL}")
                         files = reporter.generate_agent_report(target, history)
-                        print(f"\n{Fore.GREEN}[SUCCESS] Laporan tersimpan!{Style.RESET_ALL}")
-                        print(f"Files: {files}")
+                        print(f"\n{Fore.GREEN}[SUCCESS] Report Generated!{Style.RESET_ALL}")
                     
                     input(f"\n{Fore.GREEN}[Tekan Enter kembali ke menu]{Style.RESET_ALL}")
                     if cli_mode: sys.exit()
@@ -208,9 +182,7 @@ def main():
                     print(f"\n{Fore.RED}[!] Force Stop.{Style.RESET_ALL}")
                     sys.exit()
                 except Exception as e:
-                    print(f"\n{Fore.RED}[CRASH ERROR] {e}{Style.RESET_ALL}")
-                    import traceback
-                    traceback.print_exc() # Print detail error
+                    print(f"\n{Fore.RED}[ERROR] {e}{Style.RESET_ALL}")
                     input("Tekan Enter...")
                     sys.exit()
 
@@ -218,7 +190,5 @@ def main():
             else: break
         if provider == "BACK": continue
 
-# --- PENTING: ENTRY POINT ---
-# Jika bagian ini hilang, script tidak akan jalan
 if __name__ == "__main__":
     main()
