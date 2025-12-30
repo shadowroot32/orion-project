@@ -1,0 +1,5 @@
+# Nmap 7.98 scan initiated Tue Dec 30 16:52:07 2025 as: /usr/lib/nmap/nmap --privileged -p- -sV -oA tradepmr_nmap www.tradepmr.com
+mass_dns: warning: Unable to determine any DNS servers. Reverse DNS is disabled. Try using --system-dns or specify valid servers with --dns-servers
+Failed to resolve "www.tradepmr.com".
+WARNING: No targets were specified, so 0 hosts scanned.
+# Nmap done at Tue Dec 30 16:52:08 2025 -- 0 IP addresses (0 hosts up) scanned in 0.22 seconds
