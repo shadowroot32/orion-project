@@ -1,5 +1,4 @@
 # 🌌 ORION AUDIT FRAMEWORK
-
 <img width="484" height="525" alt="Image" src="https://github.com/user-attachments/assets/74ded6a9-13f4-4dcf-b37a-01c4c3d99583" />
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
