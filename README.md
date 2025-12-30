@@ -1,13 +1,13 @@
 # 🌌 ORION AUDIT FRAMEWORK
 
+<img width="2049" height="1166" alt="Image" src="https://github.com/user-attachments/assets/8f330780-ec07-41af-a3c9-7b31845cc565" />
+
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
 ![Platform](https://img.shields.io/badge/Platform-Kali%20Linux-black?style=for-the-badge&logo=linux)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![AI Powered](https://img.shields.io/badge/AI-Hybrid%20Engine-purple?style=for-the-badge)
 
 > **Advanced Autonomous AI Penetration Testing & Reporting Framework**
-
-`![Screenshot Tool](path/to/Screenshot_20251227_175617.png)`
 
 **Orion** adalah kerangka kerja audit keamanan siber otomatis yang menggabungkan kecerdasan buatan (AI) dengan *arsenal* tools Kali Linux. Tidak sekadar *scanner* biasa, Orion bertindak sebagai **Agen Otonom** yang mampu berpikir, menganalisis output scan, dan menentukan langkah serangan selanjutnya secara logis.
 
