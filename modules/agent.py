@@ -22,12 +22,10 @@ class AIAgent:
 
     def compress_output(self, text):
         if not text: return "", False 
-        
         text = str(text)
         success_keys = ["open", "200", "301", "critical", "high", "medium", "vulnerable", "found", "root"]
         lines = [l.strip() for l in text.split('\n')]
         important = [l for l in lines if any(k in l.lower() for k in success_keys) or (len(l)<150 and "/" in l)]
-        
         return "\n".join(important[:25]), (len(important) > 0)
 
     def get_fallback_tool(self, used_str):
@@ -47,7 +45,7 @@ class AIAgent:
         is_empty = len(raw_output) < 10
         report = f"[SYSTEM]: Tool '{last_tool}' failed/empty. SWITCH STRATEGY." if is_empty else "[SYSTEM]: Findings detected. Proceed."
 
-        # PERBAIKAN PROMPT: Hapus instruksi path folder cves/ yang membingungkan AI
+        # PERBAIKAN: Instruksi Nmap Anti-Blokir
         prompt = f"""
         [ROLE] Elite Red Team Operator. Target: {target_url}
         [CONTEXT] Log Dir: {log_dir} | Allowed: {self.tool_sequence}
@@ -56,7 +54,8 @@ class AIAgent:
         [RULE] 
         1. ALWAYS use `| tee {log_dir}/filename.txt`. 
         2. Output SINGLE LINE command.
-        3. For Nuclei, DO NOT use '-t' flag unless specific. Let it use default templates.
+        3. For Nmap: Use '-Pn -sT --top-ports 1000' (Faster & Connect Scan). Do NOT use -sS if network is unstable.
+        4. For Nuclei: Do NOT use '-t' flag.
         """
         
         user_msg = f"Last Output:\n{clean_log}\n\nNext Step?"
@@ -64,12 +63,9 @@ class AIAgent:
 
         cmd = self.engine.chat(prompt, user_msg).replace("```bash", "").replace("```", "").strip().replace("\n", " && ")
         
-        # PERBAIKAN FALLBACK: Hapus '-t cves/' agar pakai template default sistem
         if not any(t in cmd for t in self.tool_sequence) and "cd" not in cmd:
             fb = self.get_fallback_tool(tools_used_str)
-            if "nuclei" in fb: 
-                # HAPUS "-t cves/" DISINI
-                return f"nuclei -u {target_url} | tee {log_dir}/nuclei.txt"
+            if "nuclei" in fb: return f"nuclei -u {target_url} | tee {log_dir}/nuclei.txt"
             return f"{fb} {target_url} | tee {log_dir}/fallback.txt"
             
         return cmd

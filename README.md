@@ -1,140 +1,117 @@
-# 🌌 ORION: AI-Powered Autonomous Red Team Framework
-<img width="484" height="525" alt="Image" src="https://github.com/user-attachments/assets/74ded6a9-13f4-4dcf-b37a-01c4c3d99583" />
-
+# 🌌 ORION - AI Autonomous Red Team Framework
+https://github.com/user-attachments/assets/bb33db37-dd8a-4e82-a303-5814043d5612
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![AI-Powered](https://img.shields.io/badge/AI-Gemini%20%7C%20Groq%20%7C%20Ollama-purple)
+![AI](https://img.shields.io/badge/AI-Powered-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Active-red)
 
-**Orion** is an autonomous penetration testing framework driven by Large Language Models (LLMs). Unlike traditional scanners that randomly fire scripts, Orion **"thinks"** like a human hacker. It analyzes output, decides the next best move, and executes a full Cyber Kill Chain from Reconnaissance to Covering Tracks.
+**Orion** adalah kerangka kerja *Pentest Otonom* yang didukung oleh kecerdasan buatan (LLM). Alat ini mampu merencanakan, mengeksekusi, dan melaporkan celah keamanan secara mandiri menggunakan strategi *Cyber Kill Chain* (A-L).
 
-> ⚠️ **DISCLAIMER:** This tool is for **EDUCATIONAL PURPOSES & AUTHORIZED PENTESTING ONLY**. The author is not responsible for any misuse.
-
----
-
-## 🧠 Why Orion?
-
-- **🤖 AI Brain:** Uses Google Gemini, Groq, or Ollama to analyze vulnerabilities in real-time.
-- **💸 Token Saver Engine:** Automatically filters "junk logs" (progress bars, banners) to reduce API costs by 80%.
-- **🔄 Anti-Loop Logic:** Detects if a tool is stuck and forces a strategy shift.
-- **☁️ Hybrid Cloud Hunting:** If the web server is secure, Orion pivots to find exposed AWS S3 buckets or Azure Blobs.
-- **🏴‍☠️ Full Kill Chain:** Covers strategies A through L (see below).
+Dirancang untuk **Kali Linux**, Orion menggabungkan kecepatan scanning manual dengan kecerdasan analisis AI.
 
 ---
 
-## 🗺️ The Strategy: Kill Chain A-L
+## 🚀 Fitur Utama
 
-Orion follows a strict military-grade attack framework:
+### 🧠 1. Multi-Brain AI Support
+Pilih otak AI yang ingin digunakan:
+- **Groq (Llama3-70b):** Super cepat & Gratis.
+- **Gemini (1.5 Flash):** Analisis mendalam & Gratis.
+- **OpenAI (GPT-4o):** Akurasi tinggi (Berbayar).
+- **Ollama (Local):** Privasi total (Offline).
 
-| Strategy | Code | Description | Tools Used |
-| :--- | :---: | :--- | :--- |
-| **Recon** | `A` | WAF detection & Tech fingerprinting | `wafw00f`, `whatweb` |
-| **Discovery** | `B` | Vulnerability scanning & Fuzzing | `nuclei`, `feroxbuster` |
-| **Guerrilla** | `G` | Hidden parameter hunting | `arjun` |
-| **Exploitation** | `C` | Database injection & Brute-force | `sqlmap`, `hydra` |
-| **Weaponization**| `E` | Backdoor/Payload generation | `weevely`, `msfvenom` |
-| **Looting** | `F` | Stealing Source Code & Secrets | `git-dumper`, `curl` |
-| **Cloud** | `H` | S3 Bucket Enumeration | `cloud_enum`, `awscli` |
-| **Internal** | `I` | Internal Network Mapping | `nmap`, `ping` |
-| **PrivEsc** | `K` | Privilege Escalation (Root) | `linpeas`, `suid` |
-| **Laundering** | `L` | Log Wiping & cleanup | `rm`, `history -c` |
+### 🛡️ 2. Hybrid Stealth Mode (Anti-Ban)
+Sistem pintar yang memisahkan jalur lalu lintas data:
+- **Web Tools (Nuclei, Curl, Ferox):** Otomatis melalui **Tor Proxychains** (Rotasi IP) untuk menghindari WAF.
+- **Network Tools (Nmap):** Koneksi Langsung + **Decoy IPs** (IP Palsu) agar tetap cepat namun tersamar.
+
+### 📑 3. Professional AI Reporting
+Bukan sekadar log mentah. Orion menghasilkan laporan setara konsultan keamanan:
+- **Format:** PDF, HTML, dan Markdown.
+- **Konten:** Ringkasan Eksekutif, Analisis Teknis, Dampak, dan Remediasi.
+- **Bahasa:** Laporan otomatis dalam Bahasa Indonesia.
+
+### ⚔️ 4. Full Kill Chain Arsenal
+- **Recon:** Wafw00f, Whatweb, Whois.
+- **Discovery:** Nuclei, Feroxbuster, Arjun.
+- **Exploitation:** SQLMap, Hydra, Weevely.
+- **Cloud:** AWS S3 Scanner, Cloud Enum.
+- **PrivEsc:** LinPEAS (Linux Privilege Escalation).
 
 ---
 
-## 🛠️ Installation
+## 📦 Instalasi
 
-Orion requires **Kali Linux** or a similar Debian-based pentest distro.
-
-### 1. System Dependencies
-Install core tools from the Kali repository:
+### Prasyarat (Kali Linux)
+Install tool pendukung (Tor & Proxychains wajib untuk Hybrid Mode):
 ```bash
-sudo apt update && sudo apt install -y \
-    python3-pip python3-venv \
-    nmap wafw00f whatweb nuclei feroxbuster \
-    arjun sqlmap hydra weevely awscli \
-    curl wget git
-
-### 2. Manual Install: Cloud Enum (Important!)
-Since cloud_enum is not in standard repositories, install it manually:
-```bash
-# Clone to /opt
-sudo git clone [https://github.com/initstring/cloud_enum.git](https://github.com/initstring/cloud_enum.git) /opt/cloud_enum
-
-# Setup Virtual Environment (to bypass PEP 668)
-cd /opt/cloud_enum
-sudo python3 -m venv venv
-sudo ./venv/bin/pip install -r requirements.txt
-
-# Create a Launcher Shortcut
-echo '#!/bin/bash' | sudo tee /usr/bin/cloud_enum
-echo '/opt/cloud_enum/venv/bin/python3 /opt/cloud_enum/cloud_enum.py "$@"' | sudo tee -a /usr/bin/cloud_enum
-sudo chmod +x /usr/bin/cloud_enum
+sudo apt update
+sudo apt install -y tor proxychains4 python3-pip git nmap whatweb sqlmap hydra
 ```
-
-## 🚀 Usage
-
-### 1. Clone the Repository:
+## Setup Project
+### 1. Clone Repository:
 ```bash
-# 1. clone repo
-git clone [https://github.com/ShadowRoot32/orion-project.git](https://github.com/ShadowRoot32/orion-project.git)
+git clone [https://github.com/USERNAME-KAMU/orion-project.git](https://github.com/USERNAME-KAMU/orion-project.git)
 cd orion-project
-
-# 2. Create Virtual Environment
-python3 -m venv venv
-
-# 3. Activate Environment
-source venv/bin/activate
-
-# 4. Install Dependencies
-pip install -r requirements.txt
-pip install git-dumper
 ```
-### 2. Setup API Keys: Create a .env file:
+### 2. Install Python Libraries:
 ```bash
-GROQ_API_KEY=gsk_...
-GEMINI_API_KEY=AIza...
+pip install -r requirements.txt
 ```
-### 3. Run Orion:
+
+### 3. Konfigurasi API Key: Buat file .env dan isi kunci API (pilih salah satu atau semua):
+```bash
+GROQ_API_KEY=gsk_xxxx
+GEMINI_API_KEY=AIzaSyxxxx
+OPENAI_API_KEY=sk-xxxx
+```
+
+### 4. Aktifkan Tor (Untuk Mode Stealth):
+```bash
+sudo service tor start
+```
+## 🎮 Cara Penggunaan
+### 1. Jalankan script utama:
 ```bash
 python main.py
 ```
-### 4. Select AI Provider:
+## Menu Navigasi:
+Pilih AI: Pilih otak yang akan mengendalikan serangan.
 
-Groq: Super fast (Recommended for short scans).
+Input Target: Masukkan URL (contoh: http://testphp.vulnweb.com).
 
-Gemini 1.5 Flash: Massive context window (Best for complex logs).
+Pilih Mode Serangan:
 
-OpenAI 4.0 : Pay/Paid
+Total War: Menjalankan seluruh arsenal dari Recon sampai Exploit.
 
-Ollama: Offline & Uncensored (Requires local RAM).
+Recon Only: Hanya mengumpulkan informasi pasif.
 
-## 📂 Project Structure
-```bash
+Discovery: Mencari celah spesifik (CVE/Bug).
+
+Cloud: Scanning bucket S3.
+
+Tentukan Langkah: Masukkan jumlah steps (Default: 100).
+
+## 📂 Struktur Project
 orion-project/
-├── main.py              # Entry point (Menu System)
-├── requirements.txt     # Python libs
-├── .env                 # API Keys
+├── main.py              # Menu Utama
+├── requirements.txt     # Dependencies
+├── .env                 # API Keys (Jangan di-upload)
+├── logs/                # Hasil Scan & Laporan PDF
 ├── modules/
-│   ├── agent.py         # The AI Brain (Logic A-L)
-│   └── scanner.py       # Tool execution wrapper
-├── utils/
-│   └── ai_engine.py     # API Handlers (Groq/Gemini/Ollama)
-└── logs/                # All scan results saved here
-```
+│   ├── agent.py         # Otak Strategi (AI Logic)
+│   └── scanner.py       # Eksekutor Perintah (Hybrid Mode)
+└── utils/
+    ├── ai_engine.py     # Konektor API (Groq/Gemini/dll)
+    ├── logger.py        # Tampilan Terminal Cantik
+    └── reporter.py      # Generator Laporan PDF/HTML
+## ⚠️ Disclaimer
+Alat ini dibuat HANYA UNTUK TUJUAN EDUKASI DAN PENGUJIAN KEAMANAN LEGAL.
 
-## 🔮 Roadmap
-[x] Integrate Cloud Hunting (AWS/Azure)
+Pengembang tidak bertanggung jawab atas penyalahgunaan alat ini.
 
-[x] Implement Token Saver (Compression)
+Jangan gunakan pada target yang tidak Anda miliki izin tertulisnya.
 
-[x] Add Anti-Loop Logic
+Use at your own risk.
 
-[ ] Add Report Generator (PDF/HTML)
-
-[ ] Add Telegram/Discord Notification
-
-### ⚠️ Disclaimer
-DISCLAIMER: > Alat ini dibuat semata-mata untuk Tujuan Edukasi dan Ethical Hacking (Audit Keamanan Resmi). Pengembang tidak bertanggung jawab atas penyalahgunaan alat ini untuk menyerang target tanpa izin tertulis (illegal hacking). Gunakan dengan bijak dan bertanggung jawab.
-
-### Developed with 💻 & ☕ by [ShadowRoot32]
+Happy Hacking! 🕵️‍♂️

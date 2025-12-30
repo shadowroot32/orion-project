@@ -2,11 +2,7 @@ import subprocess
 import os
 import time
 from datetime import datetime
-
-# IMPORT DARI MODUL LAIN
 from modules.agent import AIAgent
-
-# IMPORT DARI UTILS (Sesuai Folder Anda)
 from utils.reporter import Reporter
 from utils.logger import EduLogger
 
@@ -15,6 +11,10 @@ class Scanner:
         self.target_url = target_url
         self.provider = provider
         self.api_key = api_key
+        
+        # Setting Mode Hybrid
+        self.use_proxy_for_web = True  # Web tools lewat Tor
+        self.use_proxy_for_nmap = False # Nmap lewat jalur direct (biar cepat)
         
         self.agent = AIAgent(provider, api_key)
         self.logger = EduLogger()
@@ -27,19 +27,45 @@ class Scanner:
         self.logger.set_log_dir(self.session_log_dir)
 
     def execute_command(self, command):
+        final_cmd = command
+        
+        # Cek tool apa yang dipakai
+        is_nmap = command.strip().lower().startswith("nmap")
+        
+        if is_nmap:
+            if self.use_proxy_for_nmap:
+                # Jika maksa Nmap lewat proxy (Lambat & Terbatas)
+                final_cmd = f"proxychains -q {command}"
+            else:
+                # Nmap Direct (Cepat) + Decoy (Samarkan IP)
+                # Kita inject flag Decoy jika belum ada
+                if "-D" not in command:
+                    # RND:5 artinya buat 5 IP palsu bareng IP asli kita
+                    final_cmd = command.replace("nmap", "nmap -D RND:5")
+        
+        elif self.use_proxy_for_web:
+            # Tool Web (Nuclei, Curl, etc) wajib lewat Tor
+            final_cmd = f"proxychains -q {command}"
+            
         try:
-            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            stdout, stderr = process.communicate(timeout=300) 
+            # Timeout Nmap agak lama, tool web lewat proxy juga lama
+            timeout_val = 600 
+            process = subprocess.Popen(final_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            stdout, stderr = process.communicate(timeout=timeout_val) 
             full = (stdout + stderr).strip()
             
             with open(f"{self.session_log_dir}/master_log.txt", "a", encoding="utf-8") as f:
-                f.write(f"\nCMD: {command}\n{full}\n{'='*40}\n")
+                f.write(f"\nCMD: {final_cmd}\n{full}\n{'='*40}\n")
                 
             return full if full else "[No Output]"
         except Exception as e: return f"[ERROR]: {e}"
 
     def start_scan(self, max_steps=100):
         print(f"\033[1;32m[*] Scan Started. Logs: {self.session_log_dir}\033[0m")
+        print(f"\033[1;36m[🛡️] HYBRID MODE ACTIVE:\033[0m")
+        print(f"    ├── Nmap: Direct Connection (with Decoys) -> Fast")
+        print(f"    └── Web : Proxychains (Tor) -> Anti-WAF")
+        
         curr = 1
         prev_out = None
         
