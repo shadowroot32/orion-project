@@ -1,6 +1,14 @@
 # 🌌 ORION - AI Autonomous Red Team Framework
-<video src="https://github.com/user-attachments/assets/bb33db37-dd8a-4e82-a303-5814043d5612" controls autoplay muted loop width="100%"></video>
-
+<div align="center">
+  <video 
+    src="https://github.com/user-attachments/assets/bb33db37-dd8a-4e82-a303-5814043d5612" 
+    width="100%" 
+    autoplay 
+    loop 
+    muted 
+    playsinline>
+  </video>
+</div>
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![AI](https://img.shields.io/badge/AI-Powered-orange)
