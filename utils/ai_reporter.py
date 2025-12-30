@@ -1,6 +1,7 @@
 import os
 import markdown
-import pdfkit
+# [UPDATE] Ganti pdfkit ke weasyprint
+from weasyprint import HTML, CSS 
 from datetime import datetime
 from utils.ai_engine import AIEngine
 from colorama import Fore, Style
@@ -9,112 +10,100 @@ class AIPentestReporter:
     def __init__(self, provider, api_key=None):
         self.engine = AIEngine(provider, api_key)
         
-        # CSS Sederhana agar laporan HTML/PDF terlihat Profesional
+        # CSS Professional untuk Laporan
         self.css_style = """
-        <style>
-            body { font-family: 'Helvetica', 'Arial', sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-            h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+            @page { size: A4; margin: 2cm; }
+            body { font-family: 'Helvetica', 'Arial', sans-serif; line-height: 1.6; color: #333; }
+            h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-top: 0; }
             h2 { color: #e67e22; margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-            h3 { color: #34495e; }
-            code { background-color: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-family: 'Courier New', Courier, monospace; }
-            pre { background-color: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; }
-            blockquote { border-left: 4px solid #e67e22; padding-left: 15px; color: #7f8c8d; font-style: italic; }
-            .footer { margin-top: 50px; font-size: 0.8em; text-align: center; color: #7f8c8d; }
-            .alert { color: red; font-weight: bold; }
-            .safe { color: green; font-weight: bold; }
-        </style>
+            h3 { color: #34495e; margin-top: 20px; }
+            code { background-color: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.9em; }
+            pre { background-color: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 5px; white-space: pre-wrap; font-size: 0.85em; }
+            blockquote { border-left: 4px solid #e67e22; padding-left: 15px; color: #7f8c8d; font-style: italic; margin: 20px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 0.8em; color: #999; padding: 10px 0; }
+            .timestamp { color: #666; font-size: 0.9em; margin-bottom: 30px; }
         """
 
     def generate_agent_report(self, target, session_logs):
-        print(f"  └── [REPORT] Generating Markdown, HTML & PDF using {self.engine.provider.upper()}...")
+        print(f"  └── [REPORT] Generating Documents (PDF/HTML/MD) using {self.engine.provider.upper()}...")
         
-        # 1. Menyiapkan Data Log
+        # 1. Siapkan Data Log
         evidence_text = ""
         for log in session_logs:
             evidence_text += f"\n**[STEP {log['step']}] CMD:** `{log['command']}`\n"
-            evidence_text += f"```text\n{log['output'][:800]}...\n```\n" # Batasi output di report agar rapi
+            evidence_text += f"```text\n{log['output'][:800]}...\n```\n"
             evidence_text += "---\n"
 
-        # 2. Prompt ke AI
-        prompt_system = "You are a Senior Security Auditor. Your output must be in valid Markdown format."
+        # 2. Minta AI menulis Laporan
+        prompt_system = "You are a Senior Security Auditor. Output valid Markdown."
         prompt_user = f"""
         Write a Professional Penetration Testing Report in INDONESIAN language.
         TARGET: {target}
         DATE: {datetime.now().strftime("%Y-%m-%d")}
         
-        LOGS FROM KALI LINUX AGENT:
+        LOGS FROM AGENT:
         {evidence_text}
         
-        STRUCTURE (Use Markdown headers):
+        STRUCTURE:
         # Laporan Audit Keamanan: {target}
         ## 1. Ringkasan Eksekutif
-        (Summary for management)
         ## 2. Metodologi & Tools
-        (Tools used: Nmap, etc)
         ## 3. Analisis Teknis & Temuan
-        (Deep dive into findings based on logs)
-        ## 4. Bukti Eksekusi (Log Singkat)
-        (Summarize the logs provided)
-        ## 5. Rekomendasi Perbaikan
-        (Security hardening tips)
+        ## 4. Bukti Eksekusi (Logs)
+        ## 5. Rekomendasi
         """
 
-        # 3. Menerima Teks Markdown dari AI
+        # Generate Markdown
         report_markdown = self.engine.chat(prompt_system, prompt_user)
         
-        # Setup Nama File
+        # Setup Filenames
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         safe_target = target.replace("://", "_").replace("/", "_")
-        base_filename = f"reports/ORION_{self.engine.provider.upper()}_{safe_target}_{timestamp}"
-        
-        os.makedirs("reports", exist_ok=True)
+        base_path = "reports"
+        os.makedirs(base_path, exist_ok=True)
+        base_filename = f"{base_path}/ORION_{self.engine.provider.upper()}_{safe_target}_{timestamp}"
 
         # --- EXPORT 1: MARKDOWN (.md) ---
-        md_filename = f"{base_filename}.md"
-        with open(md_filename, "w", encoding='utf-8') as f:
+        md_file = f"{base_filename}.md"
+        with open(md_file, "w", encoding='utf-8') as f:
             f.write(report_markdown)
 
         # --- EXPORT 2: HTML (.html) ---
-        html_content = markdown.markdown(report_markdown, extensions=['fenced_code', 'tables'])
+        # Konversi MD ke HTML Body
+        html_body = markdown.markdown(report_markdown, extensions=['fenced_code', 'tables'])
+        
+        # Bungkus dengan HTML Template Lengkap
         full_html = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
             <title>Security Report - {target}</title>
-            {self.css_style}
+            <style>{self.css_style}</style>
         </head>
         <body>
-            {html_content}
-            <div class="footer">Generated by ORION AI Framework - {datetime.now()}</div>
+            <div class="timestamp">Generated: {datetime.now().strftime("%d %B %Y, %H:%M")}</div>
+            {html_body}
+            <div class="footer">Generated by ORION AI Framework - Confidential</div>
         </body>
         </html>
         """
         
-        html_filename = f"{base_filename}.html"
-        with open(html_filename, "w", encoding='utf-8') as f:
+        html_file = f"{base_filename}.html"
+        with open(html_file, "w", encoding='utf-8') as f:
             f.write(full_html)
 
-        # --- EXPORT 3: PDF (.pdf) ---
-        pdf_filename = f"{base_filename}.pdf"
+        # --- EXPORT 3: PDF (.pdf) - MENGGUNAKAN WEASYPRINT ---
+        pdf_file = f"{base_filename}.pdf"
         try:
-            # Menggunakan pdfkit (wrapper wkhtmltopdf)
-            options = {
-                'page-size': 'A4',
-                'margin-top': '0.75in',
-                'margin-right': '0.75in',
-                'margin-bottom': '0.75in',
-                'margin-left': '0.75in',
-                'encoding': "UTF-8",
-                'no-outline': None
-            }
-            pdfkit.from_string(full_html, pdf_filename, options=options)
-            return f"{md_filename}, {html_filename}, {pdf_filename}"
+            # [UPDATE] Cara baru generate PDF tanpa wkhtmltopdf
+            HTML(string=full_html).write_pdf(pdf_file)
+            return f"{md_file}, {html_file}, {pdf_file}"
             
-        except OSError:
-            print(f"{Fore.RED}[WARN] 'wkhtmltopdf' not installed. PDF skipped.{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Tip: Run 'sudo apt install wkhtmltopdf' to enable PDF.{Style.RESET_ALL}")
-            return f"{md_filename}, {html_filename}"
         except Exception as e:
             print(f"{Fore.RED}[ERR] PDF Generation failed: {e}{Style.RESET_ALL}")
-            return f"{md_filename}, {html_filename}"
+            # Jika PDF gagal, kembalikan MD dan HTML saja
+            return f"{md_file}, {html_file}"
