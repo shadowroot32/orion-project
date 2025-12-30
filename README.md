@@ -1,5 +1,6 @@
 # 🌌 ORION - AI Autonomous Red Team Framework
-https://github.com/user-attachments/assets/bb33db37-dd8a-4e82-a303-5814043d5612
+<video src="https://github.com/user-attachments/assets/bb33db37-dd8a-4e82-a303-5814043d5612" controls autoplay muted loop width="100%"></video>
+
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![AI](https://img.shields.io/badge/AI-Powered-orange)
@@ -76,23 +77,24 @@ sudo service tor start
 python main.py
 ```
 ## Menu Navigasi:
-Pilih AI: Pilih otak yang akan mengendalikan serangan.
+**Pilih AI:** Pilih otak yang akan mengendalikan serangan.
 
-Input Target: Masukkan URL (contoh: http://testphp.vulnweb.com).
+**Input Target:** Masukkan URL (contoh: http://testphp.vulnweb.com).
 
-Pilih Mode Serangan:
+**Pilih Mode Serangan:**
 
-Total War: Menjalankan seluruh arsenal dari Recon sampai Exploit.
+**Total War:** Menjalankan seluruh arsenal dari Recon sampai Exploit.
 
-Recon Only: Hanya mengumpulkan informasi pasif.
+**Recon Only:** Hanya mengumpulkan informasi pasif.
 
-Discovery: Mencari celah spesifik (CVE/Bug).
+**Discovery:** Mencari celah spesifik (CVE/Bug).
 
-Cloud: Scanning bucket S3.
+**Cloud:** Scanning bucket S3.
 
-Tentukan Langkah: Masukkan jumlah steps (Default: 100).
+**Tentukan Langkah:** Masukkan jumlah steps (Default: 100).
 
 ## 📂 Struktur Project
+```bash
 orion-project/
 ├── main.py              # Menu Utama
 ├── requirements.txt     # Dependencies
@@ -105,6 +107,7 @@ orion-project/
     ├── ai_engine.py     # Konektor API (Groq/Gemini/dll)
     ├── logger.py        # Tampilan Terminal Cantik
     └── reporter.py      # Generator Laporan PDF/HTML
+```
 ## ⚠️ Disclaimer
 Alat ini dibuat HANYA UNTUK TUJUAN EDUKASI DAN PENGUJIAN KEAMANAN LEGAL.
 
@@ -114,4 +117,4 @@ Jangan gunakan pada target yang tidak Anda miliki izin tertulisnya.
 
 Use at your own risk.
 
-Happy Hacking! 🕵️‍♂️
+## Happy Hacking! 🕵️‍♂️
