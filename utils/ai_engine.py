@@ -1,113 +1,45 @@
-import os
-import sys
+import google.generativeai as genai
 from groq import Groq
 from openai import OpenAI
-import ollama
-
-# --- SMART IMPORT GOOGLE ---
-# Kode ini mencoba mendeteksi library mana yang Anda punya
-GOOGLE_SDK_TYPE = None
-try:
-    # Coba Import Library Baru (V1.0 2024/2025)
-    from google import genai
-    GOOGLE_SDK_TYPE = "NEW"
-except ImportError:
-    try:
-        # Jika gagal, Coba Import Library Lama
-        import google.generativeai as genai_old
-        GOOGLE_SDK_TYPE = "OLD"
-    except ImportError:
-        GOOGLE_SDK_TYPE = "NONE"
+import requests
 
 class AIEngine:
-    def __init__(self, provider, api_key=None, model_name=None):
-        self.provider = provider.lower()
+    def __init__(self, provider, api_key=None):
+        self.provider = provider
         self.api_key = api_key
-        self.model_name = model_name
-        
-        # --- KONFIGURASI ENGINE ---
-        if self.provider == "gemini":
-            if not api_key: raise ValueError("Gemini API Key Required")
-            
-            if GOOGLE_SDK_TYPE == "NEW":
-                # Setup SDK Baru
-                self.client = genai.Client(api_key=api_key)
-                self.model_name = model_name or "gemini-2.5-flash"
-            elif GOOGLE_SDK_TYPE == "OLD":
-                # Setup SDK Lama (Fallback)
-                genai_old.configure(api_key=api_key)
-                self.model_old = genai_old.GenerativeModel(model_name or "gemini-pro")
-            else:
-                raise ImportError("Library Google AI tidak terinstall! (pip install google-genai)")
-            
-        elif self.provider == "groq":
-            if not api_key: raise ValueError("Groq API Key Required")
-            self.client = Groq(api_key=api_key)
-            self.model_name = model_name or "llama-3.3-70b-versatile" 
-            
-        elif self.provider == "openai":
-            if not api_key: raise ValueError("OpenAI API Key Required")
-            self.client = OpenAI(api_key=api_key)
-            self.model_name = model_name or "gpt-4o"
-            
-        elif self.provider == "ollama":
-            self.model_name = model_name or "llama3"
-            try:
-                ollama.list()
-            except:
-                print("Error: Ollama service mati.")
+        try:
+            if provider == "gemini":
+                genai.configure(api_key=api_key)
+                self.model = genai.GenerativeModel('gemini-1.5-flash')
+            elif provider == "groq":
+                self.client = Groq(api_key=api_key)
+            elif provider == "openai":
+                self.client = OpenAI(api_key=api_key)
+        except Exception as e:
+            print(f"[!] AI Init Error: {e}")
 
     def chat(self, system_prompt, user_message):
-        """
-        Fungsi chat universal.
-        """
         try:
-            # 1. GEMINI LOGIC
             if self.provider == "gemini":
-                combined_prompt = f"{system_prompt}\n\n[USER INPUT]:\n{user_message}"
-                
-                if GOOGLE_SDK_TYPE == "NEW":
-                    # Cara Baru
-                    response = self.client.models.generate_content(
-                        model=self.model_name,
-                        contents=combined_prompt
-                    )
-                    return response.text.strip()
-                elif GOOGLE_SDK_TYPE == "OLD":
-                    # Cara Lama
-                    response = self.model_old.generate_content(combined_prompt)
-                    return response.text.strip()
-
-            # 2. GROQ LOGIC
+                chat = self.model.start_chat(history=[])
+                return chat.send_message(f"{system_prompt}\n\nUser Input: {user_message}").text
             elif self.provider == "groq":
-                chat_completion = self.client.chat.completions.create(
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_message}
-                    ],
-                    model=self.model_name,
-                    temperature=0.7,
+                completion = self.client.chat.completions.create(
+                    model="llama3-70b-8192",
+                    messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_message}],
+                    temperature=0.6
                 )
-                return chat_completion.choices[0].message.content.strip()
-
-            # 3. OPENAI LOGIC
+                return completion.choices[0].message.content
             elif self.provider == "openai":
-                response = self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_message}
-                    ]
+                completion = self.client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_message}],
+                    temperature=0.6
                 )
-                return response.choices[0].message.content.strip()
-
-            # 4. OLLAMA LOGIC
+                return completion.choices[0].message.content
             elif self.provider == "ollama":
-                response = ollama.chat(model=self.model_name, messages=[
-                    {'role': 'system', 'content': system_prompt},
-                    {'role': 'user', 'content': user_message},
-                ])
-                return response['message']['content'].strip()
-
+                url = "http://localhost:11434/api/generate"
+                payload = {"model": "mistral", "prompt": f"{system_prompt}\n\n{user_message}", "stream": False}
+                return requests.post(url, json=payload).json().get("response", "")
         except Exception as e:
-            return f"AI Error ({self.provider}): {str(e)}"
+            return f"Error from AI: {str(e)}"

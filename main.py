@@ -1,194 +1,124 @@
-print("[-] [SYSTEM] Memulai Python Interpreter...")
-
-import sys
 import os
-import argparse
+import sys
 import time
+from dotenv import load_dotenv
+from modules.scanner import Scanner
 
-# Cek Library Dasar
-try:
-    from colorama import Fore, Style, init
-    from dotenv import load_dotenv
-    print("[-] [SYSTEM] Library dasar (Colorama/Dotenv) OK.")
-except ImportError as e:
-    print(f"[!] CRITICAL ERROR: Library hilang. Jalankan: pip install colorama python-dotenv")
-    sys.exit()
-
-# Cek Modul Project
-try:
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    from utils.ai_reporter import AIPentestReporter
-    from modules.agent import AIAgent
-    from utils.kali_executor import KaliExecutor
-    print("[-] [SYSTEM] Modul internal OK.")
-except ImportError as e:
-    print(f"[!] CRITICAL ERROR: Gagal memuat modul internal: {e}")
-    sys.exit()
-
+# Load Environment Variables
 load_dotenv()
-init(autoreset=True)
-VERSION = "7.3.0 (Clean Logs Edition)"
-
-# --- FITUR BARU: AUTO FOLDER LOGS ---
-if not os.path.exists("logs"):
-    os.makedirs("logs")
-    print("[-] [SYSTEM] Folder 'logs/' berhasil dibuat.")
 
 def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system('clear' if os.name == 'posix' else 'cls')
 
+# --- INI BAGIAN YANG KITA KEMBALIKAN ---
 def print_banner():
-    clear_screen()
-    print(r'''
-    _  _  ____  ____  __  __  ____ 
-   / )( \(  __)(_  _)(  )(  )(  _ \
-   ) \/ ( ) _)   )(   )(__)(  ) __/
-   \____/(__)   (__) (______)(__)  
-                                
-    ''' + f"{Fore.WHITE}ORION FRAMEWORK {Fore.GREEN}{VERSION}{Style.RESET_ALL}")
-    print(f"{Fore.CYAN}    Advanced Autonomous AI Pentesting{Style.RESET_ALL}\n")
+    print("""\033[1;36m
+      ██████╗ ██████╗ ██╗ ██████╗ ███╗   ██╗
+     ██╔═══██╗██╔══██╗██║██╔═══██╗████╗  ██║
+     ██║   ██║██████╔╝██║██║   ██║██╔██╗ ██║
+     ██║   ██║██╔══██╗██║██║   ██║██║╚██╗██║
+     ╚██████╔╝██║  ██║██║╚██████╔╝██║ ╚████║
+      ╚═════╝ ╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+     \033[1;33m[ AI AUTONOMOUS RED TEAM FRAMEWORK ]\033[0m
+    """)
 
-def get_provider_choice():
+def get_custom_steps(default_val):
+    try:
+        user_input = input(f"\n\033[1;34m[?] Enter Max Steps (Default {default_val}): \033[0m").strip()
+        if not user_input: return default_val
+        val = int(user_input)
+        return val if val > 0 else default_val
+    except: return default_val
+
+def main_menu():
     while True:
+        clear_screen()
+        print_banner() # <--- Memanggil banner besar
+        
+        print("\033[1;34m[ SELECT AI BRAIN ]\033[0m")
+        print("1. Groq (Llama3-70b)     - \033[92mFast & Free\033[0m")
+        print("2. Gemini (1.5 Flash)    - \033[92mSmart & Free\033[0m")
+        print("3. Ollama (Local)        - \033[93mOffline & Privacy\033[0m")
+        print("4. OpenAI (GPT-4o)       - \033[91mPaid & Smarter\033[0m")
+        print("-" * 30)
+        print("0. \033[1;31mEXIT PROGRAM\033[0m")
+        
+        c = input("\nChoice [0-4]: ").strip()
+        if c == '0': sys.exit(0)
+        
+        prov, key = "", ""
+        if c == '1': prov, key = "groq", os.getenv("GROQ_API_KEY")
+        elif c == '2': prov, key = "gemini", os.getenv("GEMINI_API_KEY")
+        elif c == '3': prov = "ollama"
+        elif c == '4': prov, key = "openai", os.getenv("OPENAI_API_KEY")
+        else: continue
+        
+        # Cek Key (Kecuali Ollama)
+        if prov != "ollama" and not key:
+            print(f"\n\033[1;31m[!] ERROR: API Key for {prov.upper()} not found in .env!\033[0m")
+            time.sleep(2)
+            continue
+        
+        target_menu(prov, key)
+
+def target_menu(provider, api_key):
+    while True:
+        clear_screen()
         print_banner()
-        print(f"{Fore.YELLOW}[ MENU UTAMA ] PILIH AI ENGINE:{Style.RESET_ALL}")
-        print("1. Groq (Llama 3.3)   --> [Super Cepat & Gratis]")
-        print("2. Google Gemini      --> [Cerdas & Stabil]")
-        print("3. OpenAI (GPT-4o)    --> [Berbayar]")
-        print("4. Ollama (Local)     --> [Offline]")
-        print(f"{Fore.RED}0. Exit               --> [Keluar]{Style.RESET_ALL}")
+        print(f"\033[1;33m[ ACTIVE BRAIN: {provider.upper()} ]\033[0m")
         
-        choice = input(f"\n{Fore.GREEN}[?] Masukkan Pilihan (0-4): {Style.RESET_ALL}").strip()
+        target = input("\n\033[1;32m[?] Enter Target URL (or '9' Back): \033[0m").strip()
+        if target == '9': return
+        if not target: continue
         
-        if choice == '1': return "groq"
-        elif choice == '2': return "gemini"
-        elif choice == '3': return "openai"
-        elif choice == '4': return "ollama"
-        elif choice == '0': sys.exit()
-        else: input(f"{Fore.RED}[!] Pilihan tidak valid.{Style.RESET_ALL}")
+        attack_mode_menu(provider, api_key, target)
 
-def get_step_config():
+def attack_mode_menu(provider, api_key, target):
     while True:
-        print(f"\n{Fore.YELLOW}[ CONFIG ] KEDALAMAN AUDIT:{Style.RESET_ALL}")
-        print("1. Quick Scan       (10 Steps)")
-        print("2. Standard Audit   (30 Steps)")
-        print(f"{Fore.RED}3. TOTAL WAR        (100 Steps){Style.RESET_ALL}")
-        print("4. Custom Jumlah")
-        print(f"{Fore.BLUE}9. Back{Style.RESET_ALL}")
+        clear_screen()
+        print_banner()
+        print(f"Target: \033[1;32m{target}\033[0m | AI: \033[1;33m{provider.upper()}\033[0m")
+        print("\n\033[1;35m[ SELECT STRATEGY ]\033[0m")
+        print("1. \033[1;31mTOTAL WAR (A-L)\033[0m   - Full Kill Chain")
+        print("2. \033[1;36mRECONNAISSANCE\033[0m    - Passive Intel")
+        print("3. \033[1;33mDISCOVERY\033[0m         - Find Bugs")
+        print("4. \033[1;31mEXPLOITATION\033[0m      - Get Shell")
+        print("5. \033[1;37mCLOUD HUNTING\033[0m     - AWS S3")
+        print("-" * 30)
+        print("9. \033[1;33mBACK\033[0m")
+        print("0. \033[1;31mEXIT\033[0m")
         
-        choice = input(f"\n{Fore.GREEN}[?] Pilihan: {Style.RESET_ALL}").strip()
-        if choice == '1': return 10
-        elif choice == '2': return 30
-        elif choice == '3': return 100
-        elif choice == '4':
-            try: return int(input("Masukkan angka: "))
-            except: pass
-        elif choice == '9': return "BACK"
+        c = input("\nChoice [0-9]: ").strip()
+        if c == '9': return 
+        if c == '0': sys.exit(0)
 
-def get_target_input():
-    while True:
-        print(f"\n{Fore.YELLOW}[ TARGET ] MASUKKAN URL/IP:{Style.RESET_ALL}")
-        print(f"(Ketik {Fore.BLUE}'back'{Style.RESET_ALL} kembali, {Fore.RED}'exit'{Style.RESET_ALL} keluar)")
-        target = input(f"{Fore.GREEN}[?] Target: {Style.RESET_ALL}").strip()
-        if target.lower() == 'back': return "BACK"
-        if target.lower() == 'exit': sys.exit()
-        if target: return target
+        mode, steps = "ALL", 100
+        if c == '2': mode, steps = "RECON", 15
+        elif c == '3': mode, steps = "DISCOVERY", 30
+        elif c == '4': mode, steps = "EXPLOIT", 50
+        elif c == '5': mode, steps = "CLOUD", 20
+        elif c != '1': continue
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-y', '--yes', action='store_true', help='Auto-Approve')
-    parser.add_argument('-t', '--target', type=str, help='Target URL')
-    parser.add_argument('-s', '--steps', type=int, help='Steps count')
-    args = parser.parse_args()
-    cli_mode = bool(args.target)
+        final_steps = get_custom_steps(steps)
 
-    while True:
-        if cli_mode: provider = "groq"
-        else: provider = get_provider_choice()
-
-        api_key = None
-        if provider != "ollama":
-            env_var = f"{provider.upper()}_API_KEY"
-            api_key = os.getenv(env_var)
-            if not api_key:
-                print(f"\n{Fore.YELLOW}[!] API Key {provider.upper()} tidak ada di .env{Style.RESET_ALL}")
-                inp = input(f"{Fore.GREEN}[?] Masukkan Key Manual (atau 'back'): {Style.RESET_ALL}").strip()
-                if inp.lower() == 'back': continue
-                api_key = inp
-
-        while True:
-            if cli_mode: max_steps = args.steps if args.steps else 50
-            else:
-                s = get_step_config()
-                if s == "BACK": break
-                max_steps = s
-
-            while True:
-                if cli_mode: target = args.target
-                else:
-                    target = get_target_input()
-                    if target == "BACK": break
-
-                try:
-                    print_banner()
-                    print(f"{Fore.MAGENTA}[*] SESSION STARTED{Style.RESET_ALL}")
-                    executor = KaliExecutor(auto_approve=args.yes)
-                    agent = AIAgent(provider, api_key)
-                    reporter = AIPentestReporter(provider, api_key)
-
-                    print(f"    Target : {target}")
-                    print(f"    Log Dir: {Fore.YELLOW}./logs/{Style.RESET_ALL}")
-                    print("-" * 40)
-
-                    history = []
-                    last_out = None
-                    used_tools = []
-                    
-                    for i in range(1, max_steps + 1):
-                        print(f"\n{Fore.CYAN}┌── [STEP {i}/{max_steps}] AI Thinking...{Style.RESET_ALL}")
-                        
-                        ctx = ", ".join(used_tools[-10:])
-                        cmd = agent.decide_next_action(target, last_out, i, ctx)
-                        
-                        tname = cmd.split(" ")[0]
-                        if tname not in used_tools: used_tools.append(tname)
-
-                        if "FINISH" in cmd:
-                            print(f"{Fore.GREEN}└── AI Selesai.{Style.RESET_ALL}")
-                            break
-                        
-                        print(f"{Fore.YELLOW}└── Command: {cmd}{Style.RESET_ALL}")
-                        
-                        out = executor.run_command(cmd)
-                        
-                        if "skipped" in out:
-                            print(f"{Fore.RED}[!] Dibatalkan user.{Style.RESET_ALL}")
-                            break
-                        
-                        print(f"{Fore.BLUE}    [OUTPUT]: {len(out)} chars.{Style.RESET_ALL}")
-                        history.append({"step": i, "command": cmd, "output": out})
-                        last_out = out
-
-                    if history:
-                        print(f"\n{Fore.MAGENTA}┌── GENERATING REPORTS...{Style.RESET_ALL}")
-                        files = reporter.generate_agent_report(target, history)
-                        print(f"\n{Fore.GREEN}[SUCCESS] Report Generated!{Style.RESET_ALL}")
-                    
-                    input(f"\n{Fore.GREEN}[Tekan Enter kembali ke menu]{Style.RESET_ALL}")
-                    if cli_mode: sys.exit()
-                    break
-
-                except KeyboardInterrupt:
-                    print(f"\n{Fore.RED}[!] Force Stop.{Style.RESET_ALL}")
-                    sys.exit()
-                except Exception as e:
-                    print(f"\n{Fore.RED}[ERROR] {e}{Style.RESET_ALL}")
-                    input("Tekan Enter...")
-                    sys.exit()
-
-            if target == "BACK": continue
-            else: break
-        if provider == "BACK": continue
+        print(f"\n\033[1;33m[*] Initializing Orion Agent...\033[0m")
+        time.sleep(1)
+        
+        try:
+            # Panggil Scanner
+            scanner = Scanner(target_url=target, provider=provider, api_key=api_key)
+            scanner.agent.set_mode(mode)
+            scanner.start_scan(max_steps=final_steps)
+            
+            input("\n\033[1;32m[+] Mission Complete. Press Enter to return...\033[0m")
+        except KeyboardInterrupt:
+            return 
+        except Exception as e:
+            print(f"\n\033[1;31m[!] Critical Error: {e}\033[0m")
+            input("Press Enter...")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main_menu()
+    except KeyboardInterrupt:
+        sys.exit(0)

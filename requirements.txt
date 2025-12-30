@@ -1,5 +1,9 @@
 google-generativeai
 groq
 openai
-ollama
+requests
+python-dotenv
+markdown
+weasyprint
 colorama
+git-dumper

@@ -1,126 +1,75 @@
 from utils.ai_engine import AIEngine
-import os
-import re
 
 class AIAgent:
     def __init__(self, provider, api_key=None):
         self.engine = AIEngine(provider, api_key)
+        self.mode = "ALL"
+        self.full_arsenal = [
+            "wafw00f", "whatweb", "nuclei", "feroxbuster", "arjun", 
+            "sqlmap", "hydra", "weevely", "msfvenom", "git-dumper", 
+            "curl", "wget", "cloud_enum", "aws", "nmap", "ping", 
+            "linpeas", "suid", "rm", "history"
+        ]
+        self.tool_sequence = self.full_arsenal
+
+    def set_mode(self, mode_name):
+        self.mode = mode_name.upper()
+        if self.mode == "RECON": self.tool_sequence = ["wafw00f", "whatweb", "nmap", "whois"]
+        elif self.mode == "DISCOVERY": self.tool_sequence = ["nuclei", "feroxbuster", "arjun"]
+        elif self.mode == "EXPLOIT": self.tool_sequence = ["sqlmap", "hydra", "weevely", "linpeas"]
+        elif self.mode == "CLOUD": self.tool_sequence = ["cloud_enum", "aws", "curl"]
+        else: self.tool_sequence = self.full_arsenal
 
     def compress_output(self, text):
+        if not text: return "", False 
+        
+        text = str(text)
+        success_keys = ["open", "200", "301", "critical", "high", "medium", "vulnerable", "found", "root"]
+        lines = [l.strip() for l in text.split('\n')]
+        important = [l for l in lines if any(k in l.lower() for k in success_keys) or (len(l)<150 and "/" in l)]
+        
+        return "\n".join(important[:25]), (len(important) > 0)
+
+    def get_fallback_tool(self, used_str):
+        used = used_str.lower()
+        for t in self.tool_sequence:
+            if t not in used: return t
+        return self.tool_sequence[0]
+
+    def decide_next_action(self, target_url, log_dir, previous_output=None, current_step=1, tools_used_str=""):
+        raw_output = str(previous_output) if previous_output else ""
+        clean_log, has_potential = self.compress_output(raw_output)
+        
+        last_tool = "unknown"
+        for t in self.full_arsenal:
+            if t in tools_used_str.lower().split(",")[-1]: last_tool = t; break
+
+        is_empty = len(raw_output) < 10
+        report = f"[SYSTEM]: Tool '{last_tool}' failed/empty. SWITCH STRATEGY." if is_empty else "[SYSTEM]: Findings detected. Proceed."
+
+        # PERBAIKAN PROMPT: Hapus instruksi path folder cves/ yang membingungkan AI
+        prompt = f"""
+        [ROLE] Elite Red Team Operator. Target: {target_url}
+        [CONTEXT] Log Dir: {log_dir} | Allowed: {self.tool_sequence}
+        [INSTRUCTION] MODE: {self.mode}. KILL CHAIN A-L.
+        [STATUS] {report}
+        [RULE] 
+        1. ALWAYS use `| tee {log_dir}/filename.txt`. 
+        2. Output SINGLE LINE command.
+        3. For Nuclei, DO NOT use '-t' flag unless specific. Let it use default templates.
         """
-        Fungsi ajaib untuk menghemat token.
-        Hanya mengambil baris yang PENTING saja.
-        """
-        if not text: return ""
         
-        lines = text.split('\n')
-        important_lines = []
-        
-        # Kata kunci yang dicari (AI cuma butuh ini)
-        keywords = ["open", "200", "301", "403", "critical", "high", "medium", "low", 
-                    "vulnerable", "found", "detected", "title", "server", "admin", "login"]
-        
-        # Kata kunci sampah (Buang ini)
-        junk_words = ["scanning", "time remaining", "eta", "percent", "progress", 
-                      "starting", "finished", "yield", "warn", "info", "==="]
+        user_msg = f"Last Output:\n{clean_log}\n\nNext Step?"
+        if not previous_output: user_msg = f"Target: {target_url}. Start Phase 1."
 
-        for line in lines:
-            line_lower = line.lower()
+        cmd = self.engine.chat(prompt, user_msg).replace("```bash", "").replace("```", "").strip().replace("\n", " && ")
+        
+        # PERBAIKAN FALLBACK: Hapus '-t cves/' agar pakai template default sistem
+        if not any(t in cmd for t in self.tool_sequence) and "cd" not in cmd:
+            fb = self.get_fallback_tool(tools_used_str)
+            if "nuclei" in fb: 
+                # HAPUS "-t cves/" DISINI
+                return f"nuclei -u {target_url} | tee {log_dir}/nuclei.txt"
+            return f"{fb} {target_url} | tee {log_dir}/fallback.txt"
             
-            # Jika baris mengandung sampah, lewati
-            if any(junk in line_lower for junk in junk_words):
-                continue
-                
-            # Jika baris mengandung info penting, ambil
-            if any(key in line_lower for key in keywords):
-                important_lines.append(line.strip())
-            
-            # Ambil baris pendek yang mungkin berisi nama file
-            elif len(line) < 100 and "/" in line:
-                important_lines.append(line.strip())
-
-        # Gabungkan kembali, batasi max 1500 karakter (Hemat Token!)
-        result = "\n".join(important_lines)
-        return result[:1500]
-
-    def decide_next_action(self, target_url, previous_output=None, current_step=1, tools_used_str=""):
-        
-        # --- 1. FORCE PROGRESSION (ANTI-LOOP) ---
-        used_list = tools_used_str.lower()
-        override_prompt = ""
-        
-        if "wafw00f" in used_list and current_step > 2:
-            override_prompt = "RECON DONE. MOVE TO DISCOVERY (Nuclei/Arjun)."
-        if "nuclei" in used_list and current_step > 10:
-            override_prompt = "DISCOVERY DONE. MOVE TO EXPLOIT OR PRIVESC."
-
-        # --- 2. PROFILING ---
-        target_type = "WEB"
-        if target_url.startswith("*."): target_type = "WILDCARD"
-        elif target_url.endswith(".apk"): target_type = "MOBILE_STATIC"
-        
-        domain_keyword = target_url.replace("https://", "").replace("http://", "").split('.')[0]
-
-        system_prompt = f"""
-        [ROLE]
-        Elite Red Team Operator. Target: {target_url} | Step: {current_step}
-        
-        [RULE]
-        1. **USE `| tee`** always.
-        2. **NO REPETITION.** {override_prompt}
-        3. **BE EFFICIENT.** Do not run same scan twice.
-
-        [STRATEGY: KILL CHAIN A-L]
-        A: Recon (wafw00f, whatweb)
-        B: Discovery (nuclei, feroxbuster)
-        G: Guerrilla (arjun params)
-        C: Exploit (sqlmap, hydra)
-        E: Weapon (weevely backdoor)
-        F: Loot (git-dumper, env)
-        H: Cloud (cloud_enum, aws s3)
-        I: Internal (nmap local)
-        K: PrivEsc (linpeas)
-        L: CleanUp (rm logs)
-
-        [DECISION]
-        - Check output below.
-        - If 'Found' -> Exploit/Loot.
-        - If 'Nothing' -> Next Strategy.
-        - Stuck? -> Run 'nuclei' or 'arjun'.
-        
-        OUTPUT ONLY THE LINUX COMMAND (SINGLE LINE).
-        """
-
-        if not previous_output:
-            user_msg = f"Target: {target_url}. Step 1. Start Recon."
-        else:
-            # --- 3. FILTERING (RAHASIA HEMAT TOKEN) ---
-            # Kita bersihkan output sebelum dikirim ke AI
-            raw_output = str(previous_output)
-            clean_output = self.compress_output(raw_output)
-            
-            # Jika output kosong setelah dibersihkan, beri peringatan hemat
-            if len(clean_output) < 5:
-                clean_output = "[Log Cleaned: No critical findings in last step. Proceed to next tool.]"
-
-            user_msg = f"""
-            [SUMMARY OF FINDINGS]:
-            {clean_output}
-            
-            [INSTRUCTION]
-            Based on findings above, what is the NEXT BEST STEP?
-            Output ONLY the command.
-            """
-
-        response = self.engine.chat(system_prompt, user_msg)
-        clean_cmd = response.replace("```bash", "").replace("```", "").replace("`", "").strip()
-        clean_cmd = clean_cmd.replace("\n", " && ")
-
-        # Safety Override
-        if "wafw00f" in clean_cmd and "wafw00f" in used_list:
-            return f"nuclei -u {target_url} -t cves/ | tee logs/step{current_step}_nuclei.txt"
-            
-        if not clean_cmd:
-            return f"nmap -sV {target_url} | tee logs/fallback.txt"
-
-        return clean_cmd
+        return cmd
