@@ -4,11 +4,13 @@ class AIAgent:
     def __init__(self, provider, api_key=None):
         self.engine = AIEngine(provider, api_key)
         self.mode = "ALL"
-        # Arsenal Aman (Tanpa LinPEAS/Crash Tools)
+        
+        # --- PERBAIKAN: HAPUS 'PING' AGAR TIDAK MACET DI TOR ---
         self.full_arsenal = [
             "wafw00f", "whatweb", "nuclei", "feroxbuster", "arjun", 
             "sqlmap", "hydra", "weevely", "msfvenom", "git-dumper", 
-            "curl", "wget", "cloud_enum", "aws", "nmap", "ping"
+            "curl", "wget", "cloud_enum", "aws", "nmap" 
+            # 'ping', 'linpeas', 'suid' SUDAH DIHAPUS
         ]
         self.tool_sequence = self.full_arsenal
 
@@ -45,7 +47,6 @@ class AIAgent:
         is_empty = len(raw_output) < 10
         report = f"[SYSTEM]: Tool '{last_tool}' failed/empty. SWITCH STRATEGY." if is_empty else "[SYSTEM]: Findings detected. Proceed."
 
-        # PERBAIKAN: Instruksi agar file disimpan di log_dir
         prompt = f"""
         [ROLE] Elite Red Team Operator. Target: {target_url}
         [CONTEXT] Log Dir: {log_dir} | Allowed: {self.tool_sequence}
