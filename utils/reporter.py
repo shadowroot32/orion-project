@@ -30,46 +30,74 @@ class Reporter:
     def read_logs(self):
         combined = ""
         if not os.path.exists(self.log_dir): return ""
+        
+        # --- UPDATE: Daftar file yang boleh dibaca AI ---
+        allowed_ext = (".txt", ".log", ".html", ".xml", ".json", ".php", ".js", ".md")
+        
+        print(f"{Fore.CYAN}[REPORT] Reading artifacts from logs...{Style.RESET_ALL}")
+        
         for f in sorted(os.listdir(self.log_dir)):
-            if f.endswith(".txt") and f != "master_log.txt":
+            # Cek apakah ekstensinya diizinkan
+            if f.endswith(allowed_ext) and f != "master_log.txt":
                 try:
                     path = os.path.join(self.log_dir, f)
+                    # Baca file (ignore error jika ada karakter aneh)
                     content = open(path, "r", encoding="utf-8", errors="ignore").read().strip()
-                    if content: combined += f"\n### Log: {f}\n```text\n{content[:2000]}...\n```\n"
-                except: pass
+                    
+                    if content:
+                        # Batasi 3000 karakter per file agar AI tidak pusing/overload
+                        preview = content[:3000]
+                        combined += f"\n### File Evidence: {f}\n```text\n{preview}\n...(truncated)\n```\n"
+                        print(f"  ├── Loaded: {f}")
+                except Exception as e:
+                    print(f"  ├── Error reading {f}: {e}")
+                    
         return combined
 
     def generate_report(self):
         print(f"\n{Fore.CYAN}[REPORT] Initializing AI Reporter...{Style.RESET_ALL}")
         evidence = self.read_logs()
-        if not evidence: return print(f"{Fore.RED}[!] No logs found.{Style.RESET_ALL}")
+        if not evidence: return print(f"{Fore.RED}[!] No readable logs found.{Style.RESET_ALL}")
 
-        print(f"{Fore.YELLOW}  └── Sending data to AI...{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}  └── Sending data to AI (Thinking)...{Style.RESET_ALL}")
         prompt = f"""
         Write a Professional Penetration Test Report in INDONESIAN.
         TARGET: {self.target}
-        LOGS: {evidence}
+        EVIDENCE DATA:
+        {evidence}
+        
+        INSTRUCTIONS:
+        1. Analyze the 'File Evidence' above. If you see source code (HTML/JS), analyze it for secrets/comments.
+        2. If you see tool logs (Nuclei/Nmap), summarize the findings.
+        3. Structure the report formally.
+        
         STRUCTURE:
-        # Laporan Audit Keamanan
+        # Laporan Audit Keamanan: {self.target}
         ## 1. Ringkasan Eksekutif
         ## 2. Metodologi
-        ## 3. Temuan Teknis & Dampak
-        ## 4. Rekomendasi
+        ## 3. Analisis Temuan (Technical Analysis)
+        ## 4. Rekomendasi Perbaikan
         """
 
         try:
-            md = self.engine.chat("You are a Security Auditor. Output Markdown.", prompt)
+            md = self.engine.chat("You are a Senior Security Auditor. Output Markdown only.", prompt)
             
+            # Simpan Markdown
             with open(f"{self.base_report_path}.md", "w", encoding="utf-8") as f: f.write(md)
-            print(f"{Fore.GREEN}  ├── Saved MD{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}  ├── Saved MD Report{Style.RESET_ALL}")
 
+            # Convert ke HTML
             html = f"<html><head><style>{self.css_style}</style></head><body>{markdown.markdown(md, extensions=['fenced_code', 'tables'])}</body></html>"
             with open(f"{self.base_report_path}.html", "w", encoding="utf-8") as f: f.write(html)
-            print(f"{Fore.GREEN}  ├── Saved HTML{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}  ├── Saved HTML Report{Style.RESET_ALL}")
 
+            # Convert ke PDF
             if PDF_SUPPORT:
-                HTML(string=html).write_pdf(f"{self.base_report_path}.pdf")
-                print(f"{Fore.GREEN}  └── Saved PDF{Style.RESET_ALL}")
+                try:
+                    HTML(string=html).write_pdf(f"{self.base_report_path}.pdf")
+                    print(f"{Fore.GREEN}  └── Saved PDF Report{Style.RESET_ALL}")
+                except Exception as e:
+                    print(f"{Fore.RED}  └── PDF Error: {e}{Style.RESET_ALL}")
             else:
                 print(f"{Fore.YELLOW}  └── PDF Skipped (Install weasyprint){Style.RESET_ALL}")
 

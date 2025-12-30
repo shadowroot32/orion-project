@@ -4,11 +4,11 @@ class AIAgent:
     def __init__(self, provider, api_key=None):
         self.engine = AIEngine(provider, api_key)
         self.mode = "ALL"
+        # Arsenal Aman (Tanpa LinPEAS/Crash Tools)
         self.full_arsenal = [
             "wafw00f", "whatweb", "nuclei", "feroxbuster", "arjun", 
             "sqlmap", "hydra", "weevely", "msfvenom", "git-dumper", 
-            "curl", "wget", "cloud_enum", "aws", "nmap", "ping", 
-            "linpeas", "suid", "rm", "history"
+            "curl", "wget", "cloud_enum", "aws", "nmap", "ping"
         ]
         self.tool_sequence = self.full_arsenal
 
@@ -16,7 +16,7 @@ class AIAgent:
         self.mode = mode_name.upper()
         if self.mode == "RECON": self.tool_sequence = ["wafw00f", "whatweb", "nmap", "whois"]
         elif self.mode == "DISCOVERY": self.tool_sequence = ["nuclei", "feroxbuster", "arjun"]
-        elif self.mode == "EXPLOIT": self.tool_sequence = ["sqlmap", "hydra", "weevely", "linpeas"]
+        elif self.mode == "EXPLOIT": self.tool_sequence = ["sqlmap", "hydra", "weevely"]
         elif self.mode == "CLOUD": self.tool_sequence = ["cloud_enum", "aws", "curl"]
         else: self.tool_sequence = self.full_arsenal
 
@@ -45,16 +45,19 @@ class AIAgent:
         is_empty = len(raw_output) < 10
         report = f"[SYSTEM]: Tool '{last_tool}' failed/empty. SWITCH STRATEGY." if is_empty else "[SYSTEM]: Findings detected. Proceed."
 
-        # PERBAIKAN: Instruksi Nmap Anti-Blokir
+        # PERBAIKAN: Instruksi agar file disimpan di log_dir
         prompt = f"""
         [ROLE] Elite Red Team Operator. Target: {target_url}
         [CONTEXT] Log Dir: {log_dir} | Allowed: {self.tool_sequence}
         [INSTRUCTION] MODE: {self.mode}. KILL CHAIN A-L.
         [STATUS] {report}
         [RULE] 
-        1. ALWAYS use `| tee {log_dir}/filename.txt`. 
+        1. ALWAYS save outputs to {log_dir}. 
+           - curl: curl -o {log_dir}/page.html ...
+           - wget: wget -O {log_dir}/file ...
+           - others: | tee {log_dir}/filename.txt
         2. Output SINGLE LINE command.
-        3. For Nmap: Use '-Pn -sT --top-ports 1000' (Faster & Connect Scan). Do NOT use -sS if network is unstable.
+        3. For Nmap: Use '-Pn -sT --top-ports 1000'.
         4. For Nuclei: Do NOT use '-t' flag.
         """
         
