@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.98 scan initiated Tue Dec 30 18:37:39 2025 as: /usr/lib/nmap/nmap -&#45;privileged -sS -sV -sC -Pn -p- -&#45;min-rate 1000 -oA nmap_full_aggressive oak.robinhood.net -->
+<nmaprun scanner="nmap" args="/usr/lib/nmap/nmap -&#45;privileged -sS -sV -sC -Pn -p- -&#45;min-rate 1000 -oA nmap_full_aggressive oak.robinhood.net" start="1767094659" startstr="Tue Dec 30 18:37:39 2025" version="7.98" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="65535" services="1-65535"/>
+<verbose level="0"/>
+<debugging level="0"/>
+<runstats><finished time="1767094659" timestr="Tue Dec 30 18:37:39 2025" summary="Nmap done at Tue Dec 30 18:37:39 2025; 0 IP addresses (0 hosts up) scanned in 0.82 seconds" elapsed="0.82" exit="success"/><hosts up="0" down="0" total="0"/>
+</runstats>
+</nmaprun>
