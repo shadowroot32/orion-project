@@ -1,0 +1,27 @@
+# --- RAHASIA (JANGAN DIUPLOAD) ---
+.env
+.env.*
+*.key
+*.pem
+
+# --- PYTHON CACHE ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- HASIL SCAN & REPORT (PRIVASI) ---
+reports/
+logs/
+*.log
+*.pdf
+*.html
+
+# --- SYSTEM ---
+.DS_Store
+Thumbs.db
+myenv/
+venv/
+env/
+nikto_output.txt
+output.txt
+gobuster_output.txt
