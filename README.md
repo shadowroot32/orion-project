@@ -1,123 +1,138 @@
-# 🌌 ORION AUDIT FRAMEWORK
+# 🌌 ORION: AI-Powered Autonomous Red Team Framework
 <img width="484" height="525" alt="Image" src="https://github.com/user-attachments/assets/74ded6a9-13f4-4dcf-b37a-01c4c3d99583" />
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
-![Platform](https://img.shields.io/badge/Platform-Kali%20Linux-black?style=for-the-badge&logo=linux)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![AI Powered](https://img.shields.io/badge/AI-Hybrid%20Engine-purple?style=for-the-badge)
 
-> **Advanced Autonomous AI Penetration Testing & Reporting Framework**
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![AI-Powered](https://img.shields.io/badge/AI-Gemini%20%7C%20Groq%20%7C%20Ollama-purple)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Active-red)
 
-**Orion** adalah kerangka kerja audit keamanan siber otomatis yang menggabungkan kecerdasan buatan (AI) dengan *arsenal* tools Kali Linux. Tidak sekadar *scanner* biasa, Orion bertindak sebagai **Agen Otonom** yang mampu berpikir, menganalisis output scan, dan menentukan langkah serangan selanjutnya secara logis.
+**Orion** is an autonomous penetration testing framework driven by Large Language Models (LLMs). Unlike traditional scanners that randomly fire scripts, Orion **"thinks"** like a human hacker. It analyzes output, decides the next best move, and executes a full Cyber Kill Chain from Reconnaissance to Covering Tracks.
 
----
-
-## 🚀 Fitur Unggulan
-
-* **🧠 Hybrid AI Engine:** Mendukung fleksibilitas penuh pemilihan "otak" AI:
-    * **Groq (Llama 3.3):** Kecepatan super tinggi (Real-time).
-    * **Google Gemini:** Analisis cerdas dan stabil.
-    * **OpenAI (GPT-4o):** Standar industri.
-    * **Ollama (Local):** Privasi penuh & berjalan offline.
-* **🤖 Autonomous Logic:** AI menganalisis output (misal: port 80 terbuka) lalu otomatis memutuskan untuk menjalankan `nikto` atau `gobuster` tanpa campur tangan manusia.
-* **🔥 Total War Mode:** Melakukan audit mendalam hingga **100 langkah** eksekusi tools secara beruntun.
-* **📝 Triple-Format Reporting:** Menghasilkan laporan profesional dalam format **PDF, HTML, dan Markdown** secara otomatis.
-* **🛡️ Kali Linux Native:** Terintegrasi langsung dengan tools seperti `Nmap`, `Sqlmap`, `Nikto`, `Wafw00f`, `Hydra`, dll.
-* **⚡ CLI & Menu Mode:** Bisa dijalankan via menu interaktif atau *command line arguments* untuk otomatisasi cepat (`-y`).
+> ⚠️ **DISCLAIMER:** This tool is for **EDUCATIONAL PURPOSES & AUTHORIZED PENTESTING ONLY**. The author is not responsible for any misuse.
 
 ---
 
-## 🛠️ Instalasi & Persiapan
+## 🧠 Why Orion?
 
-Ikuti langkah ini untuk mengatur lingkungan pengembangan yang bersih menggunakan **Virtual Environment**.
+- **🤖 AI Brain:** Uses Google Gemini, Groq, or Ollama to analyze vulnerabilities in real-time.
+- **💸 Token Saver Engine:** Automatically filters "junk logs" (progress bars, banners) to reduce API costs by 80%.
+- **🔄 Anti-Loop Logic:** Detects if a tool is stuck and forces a strategy shift.
+- **☁️ Hybrid Cloud Hunting:** If the web server is secure, Orion pivots to find exposed AWS S3 buckets or Azure Blobs.
+- **🏴‍☠️ Full Kill Chain:** Covers strategies A through L (see below).
 
-### 1. Prasyarat
-Pastikan Anda menggunakan **Kali Linux** atau **Parrot OS** dan memiliki Python 3 terinstall.
+---
 
-### 2. Clone Repository
+## 🗺️ The Strategy: Kill Chain A-L
+
+Orion follows a strict military-grade attack framework:
+
+| Strategy | Code | Description | Tools Used |
+| :--- | :---: | :--- | :--- |
+| **Recon** | `A` | WAF detection & Tech fingerprinting | `wafw00f`, `whatweb` |
+| **Discovery** | `B` | Vulnerability scanning & Fuzzing | `nuclei`, `feroxbuster` |
+| **Guerrilla** | `G` | Hidden parameter hunting | `arjun` |
+| **Exploitation** | `C` | Database injection & Brute-force | `sqlmap`, `hydra` |
+| **Weaponization**| `E` | Backdoor/Payload generation | `weevely`, `msfvenom` |
+| **Looting** | `F` | Stealing Source Code & Secrets | `git-dumper`, `curl` |
+| **Cloud** | `H` | S3 Bucket Enumeration | `cloud_enum`, `awscli` |
+| **Internal** | `I` | Internal Network Mapping | `nmap`, `ping` |
+| **PrivEsc** | `K` | Privilege Escalation (Root) | `linpeas`, `suid` |
+| **Laundering** | `L` | Log Wiping & cleanup | `rm`, `history -c` |
+
+---
+
+## 🛠️ Installation
+
+Orion requires **Kali Linux** or a similar Debian-based pentest distro.
+
+### 1. System Dependencies
+Install core tools from the Kali repository:
 ```bash
-git clone [https://github.com/USERNAME-ANDA/orion-project.git](https://github.com/USERNAME-ANDA/orion-project.git)
+sudo apt update && sudo apt install -y \
+    python3-pip python3-venv \
+    nmap wafw00f whatweb nuclei feroxbuster \
+    arjun sqlmap hydra weevely awscli \
+    curl wget git
+
+### 2. Manual Install: Cloud Enum (Important!)
+Since cloud_enum is not in standard repositories, install it manually:
+```bash
+# Clone to /opt
+sudo git clone [https://github.com/initstring/cloud_enum.git](https://github.com/initstring/cloud_enum.git) /opt/cloud_enum
+
+# Setup Virtual Environment (to bypass PEP 668)
+cd /opt/cloud_enum
+sudo python3 -m venv venv
+sudo ./venv/bin/pip install -r requirements.txt
+
+# Create a Launcher Shortcut
+echo '#!/bin/bash' | sudo tee /usr/bin/cloud_enum
+echo '/opt/cloud_enum/venv/bin/python3 /opt/cloud_enum/cloud_enum.py "$@"' | sudo tee -a /usr/bin/cloud_enum
+sudo chmod +x /usr/bin/cloud_enum
+```
+
+## 🚀 Usage
+
+### 1. Clone the Repository:
+```bash
+# 1. clone repo
+git clone [https://github.com/ShadowRoot32/orion-project.git](https://github.com/ShadowRoot32/orion-project.git)
 cd orion-project
-```
 
-### 3. Setup Virtual Environment (Sangat Disarankan)
-Gunakan virtual environment agar library project tidak mengganggu sistem Linux utama Anda.
-```bash
-# Install paket venv (jika belum ada)
-sudo apt install python3-venv
+# 2. Create Virtual Environment
+python3 -m venv venv
 
-# Buat virtual environment bernama 'myenv'
-python3 -m venv myenv
+# 3. Activate Environment
+source venv/bin/activate
 
-# Aktifkan virtual environment
-# (Tanda (myenv) akan muncul di terminal Anda)
-source myenv/bin/activate
-```
-
-### 4. Install Dependencies
-Install semua library Python yang dibutuhkan:
-```bash
+# 4. Install Dependencies
 pip install -r requirements.txt
+pip install git-dumper
 ```
-
-### 5. Install System Tools
-Untuk fitur generate PDF laporan, kita membutuhkan wkhtmltopdf:
+### 2. Setup API Keys: Create a .env file:
 ```bash
-sudo apt update
-sudo apt install wkhtmltopdf
+GROQ_API_KEY=gsk_...
+GEMINI_API_KEY=AIza...
 ```
-## ⚙️ Konfigurasi API Key
-Orion menggunakan file .env untuk menyimpan kunci rahasia agar aman dan tidak perlu diketik ulang.
-
-### 1.Buat file .env di dalam folder project:
-```bash
-nano .env
-```
-### 2. Salin dan isi konfigurasi berikut (sesuaikan dengan AI yang ingin dipakai):
-```bash
-# Pilih salah satu atau isi semua (Opsional)
-GROQ_API_KEY=gsk_yoursuperfastkey...
-GEMINI_API_KEY=AIzaSyYourGoogleKey...
-OPENAI_API_KEY=sk-proj-YourOpenAIKey...
-```
-
-### 3. Simpan file (Ctrl+O, Enter) dan keluar (Ctrl+X).
-
-## 💻 Cara Penggunaan
-Pastikan virtual environment aktif (source myenv/bin/activate) sebelum menjalankan program.
-
-➤ Mode Menu Interaktif (Recommended)
-Jalankan tanpa argumen untuk masuk ke menu navigasi visual. Anda bisa memilih AI, jumlah langkah, dan target.
+### 3. Run Orion:
 ```bash
 python main.py
 ```
-➤ Mode CLI (Cepat/Otomatis)
-Gunakan argumen untuk bypass menu. Cocok untuk task cepat.
-```bash
-# Format: python main.py -y -t [TARGET] -s [STEPS]
+### 4. Select AI Provider:
 
-# Contoh: Scan google.com, 50 langkah, auto-approve (tanpa tanya y/n)
-python main.py -y -t google.com -s 50
-```
+Groq: Super fast (Recommended for short scans).
 
-### 📂 Struktur Project
+Gemini 1.5 Flash: Massive context window (Best for complex logs).
+
+OpenAI 4.0 : Pay/Paid
+
+Ollama: Offline & Uncensored (Requires local RAM).
+
+## 📂 Project Structure
 ```bash
 orion-project/
+├── main.py              # Entry point (Menu System)
+├── requirements.txt     # Python libs
+├── .env                 # API Keys
 ├── modules/
-│   ├── agent.py          # Otak AI (Prompt Engineering)
-│   ├── backend.py        # Modul SQLi & Server
-│   ├── frontend.py       # Modul XSS & Client
-│   └── recon.py          # Modul Nmap & OSINT
+│   ├── agent.py         # The AI Brain (Logic A-L)
+│   └── scanner.py       # Tool execution wrapper
 ├── utils/
-│   ├── ai_engine.py      # Pengendali Multi-Provider (Groq/Gemini/dll)
-│   ├── ai_reporter.py    # Generator PDF/HTML Report
-│   └── kali_executor.py  # Eksekutor perintah Terminal
-├── reports/              # Hasil laporan tersimpan di sini
-├── .env                  # File API Key (RAHASIA)
-├── .gitignore            # Filter upload Git
-├── main.py               # Program Utama
-└── requirements.txt      # Daftar Library
+│   └── ai_engine.py     # API Handlers (Groq/Gemini/Ollama)
+└── logs/                # All scan results saved here
 ```
+
+## 🔮 Roadmap
+[x] Integrate Cloud Hunting (AWS/Azure)
+
+[x] Implement Token Saver (Compression)
+
+[x] Add Anti-Loop Logic
+
+[ ] Add Report Generator (PDF/HTML)
+
+[ ] Add Telegram/Discord Notification
 
 ### ⚠️ Disclaimer
 DISCLAIMER: > Alat ini dibuat semata-mata untuk Tujuan Edukasi dan Ethical Hacking (Audit Keamanan Resmi). Pengembang tidak bertanggung jawab atas penyalahgunaan alat ini untuk menyerang target tanpa izin tertulis (illegal hacking). Gunakan dengan bijak dan bertanggung jawab.
