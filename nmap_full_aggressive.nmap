@@ -1,4 +1,0 @@
-# Nmap 7.98 scan initiated Tue Dec 30 18:37:39 2025 as: /usr/lib/nmap/nmap --privileged -sS -sV -sC -Pn -p- --min-rate 1000 -oA nmap_full_aggressive oak.robinhood.net
-Failed to resolve "oak.robinhood.net".
-WARNING: No targets were specified, so 0 hosts scanned.
-# Nmap done at Tue Dec 30 18:37:39 2025 -- 0 IP addresses (0 hosts up) scanned in 0.82 seconds
